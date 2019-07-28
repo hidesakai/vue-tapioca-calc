@@ -1,0 +1,159 @@
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/vuetify@1.5.16/dist/vuetify.min.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vuetify@1.5.16/dist/vuetify.min.js"></script>
+    </head>
+    <body>
+        <div id="app">
+            <v-app id="inspire">
+                <div class="title pa-4" style="text-align:center;">
+                    <h2>タピオカミルクティー１日に何杯飲めるか？計算機</h2>
+                </div>
+                <v-container fluid fill-height>
+                    <v-layout row wrap justify-center>
+                        <v-flex xs12 sm10 md8 lg6>
+                            <v-card v-if="display !== true" class="pa-4 mb-4">
+                                <v-select
+                                    type="number"
+                                    name="height"
+                                    :items="[...Array(211)].map((v,i)=>i).slice(120)"
+                                    v-model="inputHeight"
+                                    label="身長"
+                                    return-object
+                                    outline
+                                >
+                                </v-select>
+                                <v-select
+                                    type="number"
+                                    name="weight"
+                                    :items="[...Array(130)].map((v,i)=>i).slice(30)"
+                                    v-model="inputWeight"
+                                    label="体重"
+                                    return-object
+                                    outline
+                                >
+                                </v-select>
+                                <v-select
+                                    type="number"
+                                    name="age"
+                                    :items="[...Array(81)].map((v,i)=>i).slice(16)"
+                                    v-model="inputAge"
+                                    label="年齢"
+                                    return-object
+                                    outline
+                                >
+                                </v-select>
+                                <v-select
+                                    name="activity"
+                                    item-text="label"
+                                    item-value="value"
+                                    :items="activity"
+                                    v-model="inputActivity"
+                                    label="一日の活動量"
+                                    return-object
+                                    outline
+                                >
+                                </v-select>
+                                <v-radio-group v-model="inputGender" row>
+                                    <v-radio name="gender" label="男性" value="1" checked=checked></v-radio>
+                                    <v-radio name="gender" label="女性" value="2"></v-radio>
+                                </v-radio-group>
+                                <calc-button-component :text="calcuration" @click.native="calorieCalculation"></calc-button-component>
+                            </v-card>
+                            <v-card v-if="display" class="pa-4 mb-4">
+                                <v-container grid-list-sm fluid>
+                                    <v-layout row wrap>
+                                        <v-flex
+                                            v-for="tapioca in tapiocaCeil"
+                                            :key="tapioca"
+                                            xs3
+                                            d-flex
+                                        >
+                                            <tapioca-image-component :percent="(tapioca === tapiocaCeil) ? tapiocaReminder : '100'"></tapioca-image-component>
+                                        </v-flex>
+                                    </v-layout>
+                                </v-container>
+                                <result-component :count="tapiocaCount" :calorie="activityAmount"></result-component>
+                                <calc-button-component :text="recalculation" @click.native="display=false"></calc-button-component>
+                            </v-card>
+                        </v-flex>
+                    </v-layout>
+                </v-container>
+            </v-app>
+        </div>
+        <script type="text/x-template" id="calc-button">
+            <div class="text-xs-center">
+                <v-btn round color="primary">{{text}}</v-btn>
+            </div>
+        </script>
+        <script type="text/x-template" id="calc-result">
+            <div class="title pa-4" style="text-align:center;">{{count}}杯 {{calorie}}kcal</div>
+        </script>
+        <script type="text/x-template" id="tapioca-image">
+            <v-card flat tile class="d-flex">
+                <v-img
+                    :src="`tapioca_drink.png`"
+                    :lazy-src="`tapioca_drink.png`"
+                    aspect-ratio="0.7"
+                    class="wihte lighten-2"
+                    position="center top"
+                    :height="`${percent}%`"
+                >
+                </v-img>
+            </v-card>
+        </script>
+        <script>
+            Vue.component('result-component', {
+                props: ['count', 'calorie'],
+                template: '#calc-result'
+            })
+            Vue.component('calc-button-component', {
+                props: ['text'],
+                template: '#calc-button'
+            })
+            Vue.component('tapioca-image-component', {
+                props: ['percent'],
+                template: '#tapioca-image'
+            })
+            new Vue({
+                el: "#app",
+                data: {
+                    tapiocaCarolie: 400,
+                    inputHeight: 170,
+                    inputWeight: 60,
+                    inputAge: 25,
+                    inputGender: "1",
+                    inputActivity: {label: "普通", value: 1.55},
+                    activity: [
+                        {label: "低い", value: 1.2},
+                        {label: "普通", value: 1.55},
+                        {label: "高い", value: 1.725}
+                    ],
+                    tapiocaCount: 0,
+                    tapiocaReminder: 0,
+                    activityAmount: 0,
+                    display: false,
+                    calcuration: "計算する",
+                    recalculation: "計算しなおす"
+                },
+                methods: {
+                    calorieCalculation: function() {
+                        const mifflin = (10 * this.inputWeight) + (6.25 * this.inputHeight) - (5 * this.inputAge)
+                        basicMetabolism = (this.inputGender == 1) ? mifflin + 5 : mifflin - 151
+                        this.activityAmount = basicMetabolism * this.inputActivity.value
+                        const tmCount = Math.round(Math.round(this.activityAmount * 10) / this.tapiocaCarolie)
+                        this.tapiocaCount = tmCount / 10
+                        this.tapiocaCeil = Math.ceil(this.tapiocaCount)
+                        reminder = (tmCount % 10) * 10
+                        this.tapiocaReminder = (reminder === 0) ? 100 : reminder 
+                        this.display = true
+                    }
+                }
+            })
+        </script> 
+    </body>
+</html>
